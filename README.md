@@ -30,7 +30,7 @@ The communication with the backend is done via HTTP and Websockets.
   - `license_key`: The instance license key
   - `lang`: The language of the chat session
 - **Example**:
-    ```http
+    ```
     GET /init_session?license_key=123456&lang=en
     ```
 - **Response**:
@@ -77,7 +77,7 @@ It is better to think of messages as actions that are intended to trigger someth
   - `Connection`: The connection type, in this case `Upgrade`
   - `Host`: The host of the websocket server
 - **Example**:
-    ```http
+    ```
     GET /shpaiws?chat_token=d42e7dc9-...
     ```
 - **Response**:
@@ -168,9 +168,11 @@ Example:
 ```json
 {
     "type": "token",
-    "token": " examp" // Future tokens may be: "le", " of", " text"
+    "token": " examp"
 }
 ```
+*Future tokens may be: "le", " of", " text"*
+
 Do handle these messages the following way:
 - Check if the last chat message is a message of `"type": "ai"`
   - If not: Add a message with the type `ai` and the content of the token to the local chat history
