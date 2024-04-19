@@ -112,7 +112,7 @@ When the server is currently processing something, it might not respond to the h
 ### 💬 Sending user messages
 **Trigger the server to process a message.**
 
-> :warning: **Important:** Only send messages to the server when it is confirmed to be in the `operational` state. After sending a message, disable message sending until the server confirms it remains in the `operational` state.
+> ⚠️ **Important:** Only send messages to the server when it is confirmed to be in the `operational` state. After sending a message, disable message sending until the server confirms it remains in the `operational` state.
 
 The client can send messages to the server by sending the following message to the websocket:
 ```json
