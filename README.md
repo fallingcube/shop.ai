@@ -1,8 +1,3 @@
-# **ShopAI**
-Rapidly Connects Customers to Products
-
----
-
 # ShopAI API Documentation `v0.1`
 
 ## Overview
