@@ -76,6 +76,7 @@ All client events: "send_message", "get_history"
 #### Sending a user message
 **Trigger the server to process a user message**
 > **Important:** Note the [status update section](#status-update). Block any input from the user by default until the server is `operational`. Do manually set status to `processing` directly after sending a message.
+
 - Event name: `send_message`
 - Event data: `String` `max 512 characters by default`
 - Example:
@@ -145,6 +146,7 @@ All server events: "history", "status", "token", "error"
 #### New Token String
 **Contains the last generated token**
 > **What is a token?** In the context of large language models (LLMs) like GPT, “tokens” refer to the pieces of text that the model processes. These can be words, parts of words, or punctuation marks, depending on how the model’s tokenizer breaks down the input text. Tokens are the basic units that the model uses to understand and generate language.
+
 - Event name: `token`
 - Event data: `String`
 - Example:
