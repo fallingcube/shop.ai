@@ -4,9 +4,9 @@
 
 The ShopAI backend is the core of ShopAI. Currently we are running one backend instance for each customer. Each instance has it's own address to connect to. The API of each instance enables the following functionalities:
 - Initializing new chat sessions
+- Retrieving the current version
 - Sending messages
 - Retrieving the chat history
-- Retrieving the server status
 - (Custom functionalities)
 
 The communication with the backend is done via HTTP and Socket.IO.
