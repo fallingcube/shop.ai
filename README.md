@@ -166,4 +166,4 @@ All server events: "history", "status", "token", "error"
 - Event data: `String`
 - The connection always closes after an error
 
-
+Copyright © 2024 Kilian Harbauer. All rights reserved.
