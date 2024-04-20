@@ -158,7 +158,7 @@ All server events: "history", "status", "token", "error"
     - Check if the last chat message in history is an message of `"type": "ai"`
       - If not: Add a message with the type `ai` and the content of the token to the local chat history
       - If so: Concatenate the token to the last message of the local chat history
-> **Important:** When the system is done generating the response, it will send a message of type `history` with the full response. The history should always overwrite the local chat history. The system will also send a message of type `status` with the status `operational`.
+> **Important:** When the system is done generating the response, it will send a message of type `history` with the full chat history which contains the new message. The history should always overwrite the local chat history. The system will also send a message of type `status` with the status `operational`.
 
 #### Error
 **Contains an error message**
