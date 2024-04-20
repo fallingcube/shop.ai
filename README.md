@@ -1,4 +1,4 @@
-# ShopAI API Documentation `v0.1`
+# ShopAI API Documentation `v0.2`
 
 ## Overview
 
@@ -6,11 +6,10 @@ The ShopAI backend is the core of ShopAI. Currently we are running one backend i
 - Initializing new chat sessions
 - Sending messages
 - Retrieving the chat history
-- Sending heartbeats
 - Retrieving the server status
 - (Custom functionalities)
 
-The communication with the backend is done via HTTP and Websockets.
+The communication with the backend is done via HTTP and Socket.IO.
 
 
 
@@ -51,126 +50,118 @@ The communication with the backend is done via HTTP and Websockets.
         }
         ```
 
+### Retrieving the current version
+
+#### `GET /version`
+- **Response**:
+    ```json
+    {
+        "status": "ok",
+        "version": "v0.2"
+    }
+    ```
+
 ## Websocket
 
-### Concept
-Unlike HTTP, the websocket system is built in such a way that a response is not necessarily expected when a message is sent. Response messages are also not clearly recognizable as such and should not be treated as such.
-It is better to think of messages as actions that are intended to trigger something on the other side. Incoming messages should be treated in exactly the same way. 
-- **There are no server responses, only messages from the server.**
-- **You should always be prepared for every message type.** (No matter what you sent)
+### Establishing a connection
+- **Required query parameters**:
+  - `chat_token`: The chat token received from the `/init_session` endpoint
+- When successfully connected, the server will emit a `status` event with the status `operational`
+- When `chat_token` is invalid, the server will reject the connection
 
-### Connecting to the websocket
+### 💬 Client Events
 
-#### `GET /shpaiws`
-- **Description**: Establishes a websocket connection to the chat session
-- **Parameters**:
-  - `chat_token`: The chat token received from the `init_session` call
-- **Headers** (In most cases these are automatically set by the websocket client):
-  - `Sec-Websocket-Version`: The websocket version.
-  - `Sec-Websocket-Key`: The websocket key.
-  - `Sec-Websocket-Extensions`: The websocket extensions.
-  - `Connection`: The connection type, in this case `Upgrade`
-  - `Host`: The host of the websocket server
-- **Example**:
+All client events: "send_message", "get_history"
+
+#### Sending a user message
+**Trigger the server to process a user message**
+> **Important:** Note the [status update section](#status-update). Block any input from the user by default until the server is `operational`. Do manually set status to `processing` directly after sending a message.
+- Event name: `send_message`
+- Event data: `String` `max 512 characters by default`
+- Example:
     ```
-    GET /shpaiws?chat_token=d42e7dc9-...
+    This is a message.
     ```
-- **Response**:
-    - The websocket connection is established. The server will send the following websocket message:
-        ```json
-        {
-            "type": "status", 
-            "status": "operational"
-        }
-        ```
-- **Errors**:
-    - A websocket connection will be established, but the server will close it immediately. This will be improved in future versions.
 
-### 💬 Sending heartbeats
-**Trigger the server to send a heartbeat message.**
-
-To prevent the websocket connection from timing out, the client should send a heartbeat message every 15 seconds. This triggers the server to send a heartbeat message as well.
-Sending a heartbeat message is done by sending the following message to the websocket:
-```json
-{
-    "type": "heartbeat"
-}
-```
-We are triggering the server to send a heartbeat message as well:
-```json
-{
-    "type": "heartbeat"
-}
-```
-When the server is currently processing something, it might not respond to the heartbeat message immediately.
-
-### 💬 Sending user messages
-**Trigger the server to process a message.**
-
-> ⚠️ **Important:** Only send messages to the server when it is confirmed to be in the `operational` state. After sending a message, disable message sending until the server confirms it remains in the `operational` state.
-
-The client can send messages to the server by sending the following message to the websocket:
-```json
-{
-    "type": "message",
-    "message": "Hello, I would like to buy a new phone."
-}
-```
-The maximum length of the message is `512 characters` by default.
-When the message is too long, the server will send the following message:
-```json
-{
-    "type": "error",
-    "message": "Message is too long, maximum length is {max message length} characters"
-}
-```
-> **Note:** In future versions, the server will simply close the connection when the client is causing an error.
-
-### 💬 Retrieving chat history
-**Trigger the server to send the chat history.**
-
-> **Note:** We are expecting you to keep track of the chat history on the client side. A history message from the server should always overwrite the local chat history.
-
-The client can request the chat history by sending the following message to the websocket:
-```json
-{
-    "type": "get_history"
-}
-```
-
-A message from the server with the chat history will look like this:
-```json
-{
-    "type": "history",
-    "history": [
-        {
-            "type": "user",
-            "content": "Hello, I would like to buy a new phone."
-        },
+#### Retrieving the chat history
+**Trigger the server to send the chat history**
+- Event name: `get_history`
+- Event data: `Array`
+- Example:
+    ```json
+    [
         {
             "type": "ai",
-            "content": "Hello, how can I help you?"
+            "content": "Hello!"
+        },
+        {
+            "type": "user",
+            "content": "Hi!"
         }
     ]
-}
-```
+    ```
 
-### 🗨️ Tokens
-> **What is a token?** In the context of large language models (LLMs) like GPT, "tokens" refer to the pieces of text that the model processes. These can be words, parts of words, or punctuation marks, depending on how the model's tokenizer breaks down the input text. Tokens are the basic units that the model uses to understand and generate language.
+### 🗨️ Server Events
 
-While the server is processing the message, it will repeatedly send messages with the type `token`. A token message contains the last generated token.
-Example:
-```json
-{
-    "type": "token",
-    "token": " examp"
-}
-```
-*Future tokens may be: "le", " of", " text"*
+All server events: "history", "status", "token", "error"
 
-Do handle these messages the following way:
-- Check if the last chat message is a message of `"type": "ai"`
-  - If not: Add a message with the type `ai` and the content of the token to the local chat history
-  - If so: Concatenate the token to the last message of the local chat history
+#### History update
+**Contains the full chat history**
+- Event name: `history`
+- Event data: `Array`
+- Example:
+    ```json
+    [
+        {
+            "type": "ai",
+            "content": "Hello!"
+        },
+        {
+            "type": "user",
+            "content": "Hi!"
+        }
+    ]
+    ```
+- How to handle:
+    - Keep track of the chat history client-side
+    - Always overwrite the current local chat history with the received one
+    - Message types: `ai` (AI message), `user` (User message)
 
+#### Status update
+**Current status of the server**
+- Event name: `status`
+- Event data: `String`
+- Example:
+    ```
+    operational
+    ```
+- How to handle:
+  - Keep track of the server status client-side
+  - Statuses: `operational`, `processing`
+  - The server will automatically inform the client about the status changes
+  - The server may not process incoming messages directly if it is currently in `processing` status
+  - We recommend using other client-side statuses, such as `connecting`, `connected`, `disconnecting`, `disconnected`, `processing`
+
+#### New Token String
+**Contains the last generated token**
+> **What is a token?** In the context of large language models (LLMs) like GPT, “tokens” refer to the pieces of text that the model processes. These can be words, parts of words, or punctuation marks, depending on how the model’s tokenizer breaks down the input text. Tokens are the basic units that the model uses to understand and generate language.
+- Event name: `token`
+- Event data: `String`
+- Example:
+    ```
+    exam
+    ```
+    *Future tokens may be: "ple", " of", " a", " token". Concatenated this example would be "example of a token".*
+- How to handle:
+    - Check if the last chat message in history is an message of `"type": "ai"`
+      - If not: Add a message with the type `ai` and the content of the token to the local chat history
+      - If so: Concatenate the token to the last message of the local chat history
 > **Important:** When the system is done generating the response, it will send a message of type `history` with the full response. The history should always overwrite the local chat history. The system will also send a message of type `status` with the status `operational`.
+
+#### Error
+**Contains an error message**
+- Event name: `error`
+- Event data: `String`
+- The connection always closes after an error
+
+
