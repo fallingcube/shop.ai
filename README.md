@@ -61,7 +61,7 @@ The communication with the backend is done via HTTP and Socket.IO.
     }
     ```
 
-## Websocket
+## Socket.IO
 
 ### Establishing a connection
 - **Required query parameters**:
